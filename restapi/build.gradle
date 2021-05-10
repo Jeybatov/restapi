@@ -1,0 +1,92 @@
+plugins {
+    id "groovy"
+    id "com.github.johnrengelman.shadow" version "6.0.0"
+    id "application"
+}
+
+version "0.1"
+group "example.micronaut"
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url "https://oss.jfrog.org/oss-snapshot-local" }
+}
+
+configurations {
+    developmentOnly
+}
+
+dependencies {
+    compileOnly(platform("io.micronaut:micronaut-bom:$micronautVersion"))
+    compileOnly("io.micronaut:micronaut-inject-groovy")
+
+    implementation(platform("io.micronaut:micronaut-bom:$micronautVersion"))
+    implementation("io.micronaut:micronaut-inject")
+    implementation("io.micronaut:micronaut-validation")
+    implementation("io.micronaut.groovy:micronaut-runtime-groovy")
+    implementation("io.micronaut:micronaut-http-server-netty")
+    implementation("io.micronaut:micronaut-http-client")
+
+    implementation("io.micronaut.beanvalidation:micronaut-hibernate-validator")
+    implementation("io.micronaut.groovy:micronaut-hibernate-gorm")
+    runtimeOnly("com.h2database:h2")
+    runtimeOnly("org.apache.tomcat:tomcat-jdbc")
+
+    compileOnly("io.micronaut.security:micronaut-security-annotations")
+    implementation("io.micronaut.security:micronaut-security-jwt")
+
+    implementation("io.micronaut.security:micronaut-security-ldap")
+
+
+
+    runtimeOnly("ch.qos.logback:logback-classic")
+
+    testImplementation ('org.junit.jupiter:junit-jupiter-api:5.3.1')
+    testRuntimeOnly ('org.junit.jupiter:junit-jupiter-engine:5.3.1')
+    testImplementation (group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.7.1')
+    implementation (group: 'com.yahoofinance-api', name: 'YahooFinanceAPI', version: '3.5.0')
+    testImplementation(platform("io.micronaut:micronaut-bom:$micronautVersion"))
+    testImplementation("io.micronaut:micronaut-inject-groovy")
+    testImplementation("org.spockframework:spock-core") {
+        exclude group: "org.codehaus.groovy", module: "groovy-all"
+    }
+    testImplementation("io.micronaut.test:micronaut-test-spock")
+}
+
+test.classpath += configurations.developmentOnly
+
+mainClassName = "example.micronaut.Application"
+
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion('11')
+    targetCompatibility = JavaVersion.toVersion('11')
+}
+
+tasks.withType(GroovyCompile) {
+    groovyOptions.forkOptions.jvmArgs.add('-Dgroovy.parameters=true')
+}
+
+shadowJar {
+    mergeServiceFiles()
+}
+
+tasks.withType(JavaExec) {
+    classpath += configurations.developmentOnly
+    jvmArgs('-XX:TieredStopAtLevel=1', '-Dcom.sun.management.jmxremote')
+    if (gradle.startParameter.continuous) {
+        systemProperties(
+                'micronaut.io.watch.restart':'true',
+                'micronaut.io.watch.enabled':'true',
+                "micronaut.io.watch.paths":"src/main"
+        )
+    }
+}
+
+
+
